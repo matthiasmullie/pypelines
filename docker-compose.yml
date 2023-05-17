@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  pypelines: &build
+    command: sh -c 'python3 setup.py install > /dev/null 2>&1 && python3 src/pypelines/__init__.py'
+    image: pypelines
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      REDIS: $REDIS
+    volumes:
+      - ./setup.py:/pypelines/setup.py
+      - ./requirements.txt:/pypelines/requirements.txt
+      - ./src:/pypelines/src
+      - ./workflows:/pypelines/workflows
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      queue:
+        condition: service_healthy
+  worker:
+    <<: *build
+    command: sh -c 'python3 setup.py install > /dev/null 2>&1 && rq worker emitter event job -u $REDIS --disable-job-desc-logging'
+    depends_on:
+      pypelines:
+        condition: service_started
+  queue:
+    image: redis
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 3s
+      timeout: 3s
+      retries: 30

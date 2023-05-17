@@ -1,0 +1,9 @@
+/.idea
+/build
+/dist
+/.dockerignore
+/.gitignore
+/docker-compose.yml
+/Dockerfile
+/LICENSE
+/README.md

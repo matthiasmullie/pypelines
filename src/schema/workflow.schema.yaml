@@ -1,0 +1,116 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: workflow
+title: workflow
+description: >
+  Defines a workflow as a series of steps to execute after being invoked by a trigger.
+type: object
+required:
+  - on
+  - jobs
+properties:
+  name:
+    description: >
+      A name describing the workflow.
+    type: string
+  on:
+    description: >
+      The trigger invoking the workflow.
+    type: object
+    oneOf:
+      - required:
+        - schedule
+      - required:
+        - sse
+    properties:
+      sse:
+        description: >
+          Configuration for a trigger based on a server-sent event.
+        type: object
+        required:
+          - stream
+          - filter
+        properties:
+          stream:
+            description: >
+              URL of the SSE stream.
+            type: string
+            format: uri
+          format:
+            description: >
+              Format of the stream data.
+            enum:
+              - string
+              - json
+          filter:
+            description: >
+              Filter to apply to events, may contain expressions.
+            $ref: workflow#/$defs/expression
+      schedule:
+        description: >
+          Configuration for a trigger based on a cron.
+        type: array
+        items:
+          type: object
+          required:
+            - cron
+          properties:
+            cron:
+              description: >
+                Cron time.
+              type: string
+            timezone:
+              description: >
+                Timezone to match the cron in.
+              type: string
+  jobs:
+    description: >
+      An array of jobs.
+    type: object
+    additionalProperties:
+      type: object
+      required:
+        - runs-on
+        - steps
+      properties:
+        runs-on:
+          description: >
+            Name of the container image to execute the steps on.
+          type: string
+        steps:
+          description: >
+            Steps to execute.
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                description: >
+                  A name describing the step.
+                type: string
+              needs:
+                description: >
+                  Job(s) that this one depends on.
+                oneOf:
+                  - type: string
+                  - type: array
+                    items:
+                      type: string
+              if:
+                description: >
+                  Condition to satisfy before executing this and follow-up steps.
+                $ref: workflow#/$defs/expression
+              run:
+                description: >
+                  Code to execute, may contain expressions.
+                oneOf:
+                  - type: string
+                  - type: array
+                    items:
+                      type: string
+$defs:
+  expression:
+    oneOf:
+      - type: string
+      - type: array
+        items:
+          $ref: workflow#/$defs/expression

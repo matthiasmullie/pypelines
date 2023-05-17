@@ -1,0 +1,17 @@
+name: Test SSE event
+
+on:
+  sse:
+    stream: https://stream.wikimedia.org/v2/stream/mediawiki.recentchange
+    format: json
+    filter:
+      -
+        - 'sse["type"] == "edit"'
+        - 'sse["wiki"] == "mediawikiwiki"'
+
+jobs:
+  test-sse:
+    runs-on: ubuntu:latest
+    steps:
+      - name: print title
+        run: ['echo', '${{ sse["title"] }}']

@@ -1,0 +1,13 @@
+name: Test schedule event
+
+on:
+  schedule:
+    - cron: '* * * * *'
+      timezone: Europe/Brussels
+
+jobs:
+  test-schedule:
+    runs-on: ubuntu:latest
+    steps:
+      - name: print time
+        run: ['echo', '${{ schedule["mon"] }}', '${{ schedule["dom"] }}', '${{ schedule["h"] }}', '${{ schedule["m"] }}']
