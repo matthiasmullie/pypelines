@@ -12,14 +12,19 @@ from pypelines.types import EmitterConfig, EventName, EventPayload, EventTuple, 
 
 
 ScheduleEmitterConfig = List[TypedDict('ScheduleEmitterConfigValue', {
-    'cron': Required[str],
+    'cron': NotRequired[str],
+    'iso': NotRequired[str],
     'timezone': NotRequired[str],
 })]
 
 
 def get_emitter(event_name: EventName, config: EmitterConfig) -> EmitterTuple:
     for c in config:
-        assert croniter.is_valid(c['cron']), f'Invalid cron: {c["cron"]}'
+        if 'cron' in c:
+            assert croniter.is_valid(c['cron']), f'Invalid cron: {c["cron"]}'
+
+        if 'iso' in c:
+            datetime.fromisoformat(c['iso'])
 
         timezone = c['timezone'] if 'timezone' in c else 'UTC'
         assert timezone in available_timezones(), f'Invalid timezone: {timezone}'
@@ -32,7 +37,7 @@ def get_events() -> Iterable[EventTuple]:
     # be triggering an event until the start of the next minute
     previous_time_tuple = datetime.now(timezone.utc).timetuple()
     while True:
-        now_utc = datetime.now(timezone.utc)
+        now_utc = datetime.now(timezone.utc).replace(second=0, microsecond=0)
         time_tuple = now_utc.timetuple()
         if (
             previous_time_tuple.tm_year != time_tuple.tm_year or
@@ -56,13 +61,24 @@ def get_payload_for_workflow(config: EmitterConfig, now_utc: str) -> EventPayloa
         timezone = c['timezone'] if 'timezone' in c else 'UTC'
         now = datetime.fromisoformat(now_utc).astimezone(ZoneInfo(timezone))
 
-        if croniter.match(c['cron'], now):
-            return {
-                'm': now.minute,
-                'h': now.hour,
-                'dom': now.timetuple().tm_mday,
-                'mon': now.month,
-                'dow': now.isoweekday(), # Mon = 1; Sun = 7
-            }
+        payload = {
+            'iso': now.isoformat(),
+            'm': now.minute,
+            'h': now.hour,
+            'dom': now.timetuple().tm_mday,
+            'mon': now.month,
+            'dow': now.isoweekday(), # Mon = 1; Sun = 7
+        }
 
-    assert True, 'Cron not satisfied'
+        if 'cron' in c and croniter.match(c['cron'], now):
+            return payload
+
+        if 'iso' in c:
+            input = datetime.fromisoformat(c['iso']).replace(second=0, microsecond=0)
+            if not input.tzinfo or 'timezone' in c:
+                input = input.replace(tzinfo=ZoneInfo(timezone))
+            if input == now:
+                return payload
+
+    print('no match')
+    assert False, 'Schedule not satisfied'

@@ -34,12 +34,19 @@ properties:
         type: array
         items:
           type: object
-          required:
-            - cron
+          anyOf:
+            - required:
+              - cron
+            - required:
+              - iso
           properties:
             cron:
               description: >
                 Cron time.
+              type: string
+            iso:
+              description: >
+                ISO 8601 time.
               type: string
             timezone:
               description: >

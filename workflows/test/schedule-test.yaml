@@ -3,6 +3,7 @@ name: Test schedule event
 on:
   schedule:
     - cron: '* * * * *'
+    - iso: '2023-05-19 17:45'
       timezone: Europe/Brussels
 
 jobs:
@@ -10,4 +11,4 @@ jobs:
     runs-on: ubuntu:latest
     steps:
       - name: print time
-        run: ['echo', '${{ schedule["mon"] }}', '${{ schedule["dom"] }}', '${{ schedule["h"] }}', '${{ schedule["m"] }}']
+        run: ['echo', '${{ schedule["iso"] }}']
