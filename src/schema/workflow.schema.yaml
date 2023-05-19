@@ -18,10 +18,33 @@ properties:
     type: object
     oneOf:
       - required:
+        - limit
+      - required:
         - schedule
       - required:
         - sse
     properties:
+      limit:
+        description: >
+          Configuration for a trigger based on a limit.
+        type: integer
+      schedule:
+        description: >
+          Configuration for a trigger based on a cron.
+        type: array
+        items:
+          type: object
+          required:
+            - cron
+          properties:
+            cron:
+              description: >
+                Cron time.
+              type: string
+            timezone:
+              description: >
+                Timezone to match the cron in.
+              type: string
       sse:
         description: >
           Configuration for a trigger based on a server-sent event.
@@ -45,23 +68,6 @@ properties:
             description: >
               Filter to apply to events, may contain expressions.
             $ref: workflow#/$defs/expression
-      schedule:
-        description: >
-          Configuration for a trigger based on a cron.
-        type: array
-        items:
-          type: object
-          required:
-            - cron
-          properties:
-            cron:
-              description: >
-                Cron time.
-              type: string
-            timezone:
-              description: >
-                Timezone to match the cron in.
-              type: string
   jobs:
     description: >
       An array of jobs.

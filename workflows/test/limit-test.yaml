@@ -1,0 +1,11 @@
+name: Test limit event
+
+on:
+  limit: 3
+
+jobs:
+  test-limit:
+    runs-on: ubuntu:latest
+    steps:
+      - name: print index/limit
+        run: ['echo', '${{ limit["index"] + 1 }}', 'of', '${{ limit["limit"] }}']
