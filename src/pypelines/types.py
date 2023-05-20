@@ -37,11 +37,3 @@ Workflow = TypedDict('Workflow', {
 EmitterArgs = Any
 EventArgs = Any
 EventPayload = Any
-
-Event = Callable[[Workflow, EventArgs], EventPayload]
-EventTuple = Tuple[Event, EventArgs]
-
-Emitter = Callable[[EmitterArgs], Iterable[EventTuple]]
-EmitterTuple = Tuple[Emitter, EmitterArgs]
-
-EmitterProvider = Callable[[EmitterConfig], EmitterTuple]

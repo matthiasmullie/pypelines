@@ -9,7 +9,8 @@ from typing import Any, List
 from redis import Redis
 from rq import SimpleWorker, Queue
 from pypelines import expressions, jobs, workflows
-from pypelines.types import Emitter, EmitterArgs, EventPayload, EmitterProvider, Event, EventArgs, EventName, Workflow, WorkflowId
+from pypelines.emitter import Emitter
+from pypelines.types import EmitterArgs, EventPayload, EventArgs, EventName, Workflow, WorkflowId
 
 
 DOCKER_PRUNE_TIMEOUT = os.getenv('DOCKER_PRUNE_TIMEOUT')
@@ -19,12 +20,13 @@ emitter_queue = Queue('emitter', connection=redis, default_timeout=-1)
 event_queue = Queue('event', connection=redis, default_timeout='1h')
 job_queue = Queue('job', connection=redis, default_timeout='1h')
 
-emitter_callables: Dict[EventName, EmitterProvider] = {}
+emitters: Dict[EventName, Emitter] = {}
 
 
-def register_emitter(event_name: EventName, workflow_to_emitter: EmitterProvider) -> None:
-    assert event_name not in emitter_callables, 'Emitter for this event name already registered, unload existing first'
-    emitter_callables[event_name] = workflow_to_emitter
+def register_emitter(event_name: EventName, emitter: Emitter) -> None:
+    assert isinstance(emitter, Emitter), 'Emitter must be instance of `Emitter` class'
+    assert event_name not in emitters, 'Emitter for this event name already registered'
+    emitters[event_name] = emitter
 
 
 def register_workflow(
@@ -34,10 +36,11 @@ def register_workflow(
     workflows.validate(workflow)
 
     for event_name, event_config in workflow['on'].items():
-        assert event_name in emitter_callables, f'No emitter found for {event_name}'
+        assert event_name in emitters, f'No emitter found for {event_name}'
 
-        if event_name in emitter_callables:
-            emitter, *emitter_args = emitter_callables[event_name](event_name, workflow['on'][event_name])
+        if event_name in emitters:
+            emitter = emitters[event_name]
+            emitter_args = emitter.get_worker_config(event_name, workflow['on'][event_name])
             event_emitter_key = pickle.dumps((emitter, emitter_args))
 
             # enqueue emitter if it doesn't already exist
@@ -58,16 +61,16 @@ def run_emitter(
         emitter_args: EmitterArgs,
 ) -> None:
     try:
-        events = emitter(*emitter_args)
+        events = emitter.get_events(emitter_args)
     except Exception as e:
         print(f'Error executing emitter: {e}')
     else:
         event_emitter_key = pickle.dumps((emitter, emitter_args))
         workflow_ids = [workflow.decode('utf-8') for workflow in redis.lrange(event_emitter_key, 0, -1)]
-        for event, *event_args in events:
+        for event_args in events:
             event_queue.enqueue(
                 run_event,
-                args=(event_name, workflow_ids, event, event_args),
+                args=(event_name, workflow_ids, emitter, event_args),
                 result_ttl=0,
                 failure_ttl=0,
             )
@@ -76,7 +79,7 @@ def run_emitter(
 def run_event(
         event_name: EventName,
         workflow_ids: List[WorkflowId],
-        event: Event,
+        emitter: Emitter,
         event_args: EventArgs,
 ) -> None:
     for workflow_id in workflow_ids:
@@ -86,7 +89,7 @@ def run_event(
 
         workflow = pickle.loads(workflow)
         try:
-            payload = event(workflow['on'][event_name], *event_args)
+            payload = emitter.get_event_payload(workflow['on'][event_name], event_args)
         except Exception as e:
             print(f'Error executing event: {e}')
         else:

@@ -2,24 +2,24 @@
 # -*- coding: utf-8 -*-
 
 
-from typing import Iterable, List, TypedDict
-from typing_extensions import Required
-from pypelines.types import EmitterConfig, EventName, EventPayload, EventTuple, EmitterTuple
+from typing import Iterable
+from pypelines.emitter import Emitter
+from pypelines.types import EmitterArgs, EmitterConfig, EventArgs, EventName, EventPayload
 
 
-LimitEmitterConfig = List[TypedDict('LimitEmitterConfigValue', {
-    'limit': Required[int],
-})]
+class LimitEmitter(Emitter):
+    @staticmethod
+    def get_worker_config(event_name: EventName, limit: EmitterConfig) -> EmitterArgs:
+        return limit
 
 
-def get_emitter(event_name: EventName, config: EmitterConfig) -> EmitterTuple:
-    return get_events, config
+    @staticmethod
+    def get_events(limit: EmitterArgs) -> Iterable[EventArgs]:
+        for index in range(0, limit):
+            yield limit, index
 
 
-def get_events(limit: int) -> Iterable[EventTuple]:
-    for index in range(0, limit):
-        yield get_payload_for_workflow, limit, index
-
-
-def get_payload_for_workflow(config: EmitterConfig, limit: int, index: int) -> EventPayload:
-    return {'limit': limit, 'index': index}
+    @staticmethod
+    def get_event_payload(config: EmitterConfig, args: EventArgs) -> EventPayload:
+        limit, index = args
+        return {'limit': limit, 'index': index}

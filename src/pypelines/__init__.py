@@ -11,9 +11,9 @@ yaml=YAML(typ='safe')
 
 
 if __name__ == '__main__':
-    coordinator.register_emitter('limit', emitters.limit.get_emitter)
-    coordinator.register_emitter('schedule', emitters.schedule.get_emitter)
-    coordinator.register_emitter('sse', emitters.sse.get_emitter)
+    coordinator.register_emitter('limit', emitters.limit.LimitEmitter())
+    coordinator.register_emitter('schedule', emitters.schedule.ScheduleEmitter())
+    coordinator.register_emitter('sse', emitters.sse.SSEEmitter())
 
     workflow_paths = (
         f'{os.getcwd()}/workflows/test/limit-test.yaml',
