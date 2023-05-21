@@ -2,12 +2,15 @@
 # -*- coding: utf-8 -*-
 
 
-from typing import Any, Callable, Dict, Iterable, List, Tuple, TypedDict
+from typing import Any, Dict, List, TypedDict
 from typing_extensions import NotRequired, Required
 
 
 EventName = str
 EmitterConfig = Any
+EmitterArgs = Any
+EventArgs = Any
+EventPayload = Any
 
 
 Expression = str | List['Expression']
@@ -32,8 +35,3 @@ Workflow = TypedDict('Workflow', {
     'on': Required[Dict[EventName, EmitterConfig]],
     'jobs': Required[JobsConfig],
 })
-
-
-EmitterArgs = Any
-EventArgs = Any
-EventPayload = Any

@@ -12,8 +12,7 @@ from pypelines.types import EmitterArgs, EmitterConfig, EventArgs, EventName, Ev
 
 
 class ScheduleEmitter(Emitter):
-    @staticmethod
-    def get_worker_config(event_name: EventName, config: EmitterConfig) -> EmitterArgs:
+    def get_worker_config(self, event_name: EventName, config: EmitterConfig) -> EmitterArgs:
         for c in config:
             if 'cron' in c:
                 assert croniter.is_valid(c['cron']), f'Invalid cron: {c["cron"]}'
@@ -27,8 +26,7 @@ class ScheduleEmitter(Emitter):
         return None
 
 
-    @staticmethod
-    def get_events(args: EmitterArgs) -> Iterable[EventArgs]:
+    def get_events(self, args: EmitterArgs) -> Iterable[EventArgs]:
         # current time is taken as starting point, which means we won't
         # be triggering an event until the start of the next minute
         previous_time_tuple = datetime.now(timezone.utc).timetuple()
@@ -52,8 +50,7 @@ class ScheduleEmitter(Emitter):
             time.sleep(1)
 
 
-    @staticmethod
-    def get_event_payload(config: EmitterConfig, isoformat: EventArgs) -> EventPayload:
+    def get_event_payload(self, config: EmitterConfig, isoformat: EventArgs) -> EventPayload:
         now_utc = datetime.fromisoformat(isoformat)
 
         for c in config:

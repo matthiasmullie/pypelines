@@ -1,0 +1,15 @@
+name: Copies over example workflows
+
+on:
+  limit: 1
+
+jobs:
+  copy-example-workflows:
+    runs-on: ubuntu:latest
+    steps:
+      - name: copy limit workflow
+        run: ['cp', '/workflows_example/limit.yaml', '/workflows']
+      - name: copy schedule workflow
+        run: ['cp', '/workflows_example/schedule.yaml', '/workflows']
+      - name: copy sse workflow
+        run: ['cp', '/workflows_example/sse.yaml', '/workflows']

@@ -8,9 +8,8 @@ from pypelines.types import EmitterArgs, EmitterConfig, EventArgs, EventName, Ev
 
 
 class Emitter(ABC):
-    @staticmethod
     @abstractmethod
-    def get_worker_config(event_name: EventName, config: EmitterConfig) -> EmitterArgs:
+    def get_worker_config(self, event_name: EventName, config: EmitterConfig) -> EmitterArgs:
         """
         Returns arguments required to run a worker to emit events for the given workflow.
 
@@ -48,9 +47,8 @@ class Emitter(ABC):
         raise NotImplementedError('get_worker_config must be implemented')
 
 
-    @staticmethod
     @abstractmethod
-    def get_events(args: EmitterArgs) -> Iterable[EventArgs]:
+    def get_events(self, args: EmitterArgs) -> Iterable[EventArgs]:
         """
         Executes an event emitter.
 
@@ -66,8 +64,7 @@ class Emitter(ABC):
         raise NotImplementedError('get_events must be implemented')
 
 
-    @staticmethod
-    def get_event_payload(config: EmitterConfig, args: EventArgs) -> EventPayload:
+    def get_event_payload(self, config: EmitterConfig, args: EventArgs) -> EventPayload:
         """
         Events can carry a payload, which can then be used in a job inside expressions.
         It is possible to customize the payload (or even prevent the event from running

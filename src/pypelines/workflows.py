@@ -12,5 +12,9 @@ yaml=YAML(typ='safe')
 schema = yaml.load(resources.open_text('schema', 'workflow.schema.yaml'))
 
 
-def validate(workflow: Workflow):
+def load_from_file(path: str) -> Workflow:
+    return yaml.load(open(path, 'r'))
+
+
+def validate(workflow: Workflow) -> None:
     jsonschema.validate(instance=workflow, schema=schema)

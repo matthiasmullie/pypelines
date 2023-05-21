@@ -1,4 +1,4 @@
-name: Test SSE event
+name: Example SSE event workflow
 
 on:
   sse:

@@ -1,4 +1,4 @@
-name: Test limit event
+name: Example limit event workflow
 
 on:
   limit: 3
